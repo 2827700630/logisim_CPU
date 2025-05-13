@@ -30,8 +30,7 @@ if errorlevel 1 (
     echo 汇编过程失败!
     echo 请检查脚本输出或联系技术支持。
     pause
-    exit /b 1
-)
+    exit /b 1)
 
 :: 正常退出
 echo 汇编过程完毕，按任意键退出...

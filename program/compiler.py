@@ -199,10 +199,13 @@ def main_assembler(input_asm_file_path, output_hex_file_path):
     try:
         with open(output_hex_file_path, 'w') as f_hex:
             f_hex.write("v2.0 raw\n")
+            f_hex.write("0000\n") # <--- 新增：在0x00地址固定放入0000
             for hex_instr in assembled_instructions_hex:
                 f_hex.write(hex_instr + "\n")
         print(f"汇编成功。输出文件: {output_hex_file_path}")
-        print(f"文件 '{input_asm_file_path}' 共汇编指令数: {len(assembled_instructions_hex)}")
+        # 调整指令计数，因为我们添加了一个额外的0000指令
+        print(f"文件 '{input_asm_file_path}' 共汇编用户指令数: {len(assembled_instructions_hex)}")
+        print(f"ROM文件总指令数 (包含0x00处的0000): {len(assembled_instructions_hex) + 1}")
         return True
     except IOError as e:
         print(f"写入输出文件 {output_hex_file_path} 失败: {e}")
@@ -210,19 +213,23 @@ def main_assembler(input_asm_file_path, output_hex_file_path):
 
 # --- 脚本执行入口 (Script Execution) ---
 if __name__ == "__main__":
-    current_directory = os.getcwd() # 获取当前工作目录
-    print(f"当前工作目录: {current_directory}")
+    # 获取脚本文件所在的真实目录
+    script_directory = os.path.dirname(os.path.abspath(__file__))
+    print(f"编译器脚本所在目录: {script_directory}")
+    print(f"将在该目录下查找 .asm 文件并输出 .hex 文件。")
     
     asm_files_found = 0
-    for filename in os.listdir(current_directory):
+    for filename in os.listdir(script_directory): # 在脚本目录中查找文件
         if filename.lower().endswith(".asm"): # 检查文件是否以 .asm 结尾 (不区分大小写)
             asm_files_found += 1
-            input_asm_file_path = os.path.join(current_directory, filename)
+            # 构建输入文件的完整路径 (基于脚本目录)
+            input_asm_file_path = os.path.join(script_directory, filename)
             
             # 构建输出文件名，例如 "myprogram.asm" -> "myprogram_rom.hex"
             base_name = filename[:-4] # 去掉 ".asm" 后缀
             output_hex_filename = base_name + "_rom.hex"
-            output_hex_file_path = os.path.join(current_directory, output_hex_filename)
+            # 构建输出文件的完整路径 (基于脚本目录)
+            output_hex_file_path = os.path.join(script_directory, output_hex_filename)
             
             print("-" * 40) # 分隔符
             if main_assembler(input_asm_file_path, output_hex_file_path):
@@ -232,7 +239,7 @@ if __name__ == "__main__":
             print("-" * 40) # 分隔符
 
     if asm_files_found == 0:
-        print("在当前目录下未找到任何 .asm 文件。")
+        print(f"在目录 '{script_directory}' 中未找到任何 .asm 文件。")
         print("请将您的汇编文件 (.asm) 放置在本脚本所在的目录中，然后重新运行。")
         # 以下是之前用于生成示例文件的代码，您可以取消注释以生成一个测试文件
         # print("\n正在生成一个示例 .asm 文件 'example.asm' 供测试...")
@@ -246,7 +253,7 @@ if __name__ == "__main__":
         # JRZ R0, -1 ; 无限循环
         # """
         # example_input_filename = "example.asm"
-        # with open(os.path.join(current_directory, example_input_filename), "w", encoding='utf-8') as f:
+        # with open(os.path.join(script_directory, example_input_filename), "w", encoding='utf-8') as f: # 注意这里也用 script_directory
         #     f.write(example_asm_content)
         # print(f"已创建 '{example_input_filename}'。请重新运行脚本来汇编它。")
 
